@@ -18,6 +18,7 @@ public:
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
+	virtual void PostInitializeComponents() override;
 
 public:	
 	// Called every frame
@@ -29,6 +30,16 @@ public:
 	void UpDown(float Value);
 	void LeftRight(float Value);
 	void Yaw(float Value);
+	virtual void Jump();
+
+	void Attack();
+
+	UFUNCTION()
+	void OnAttackMontageEnded(UAnimMontage* Montage, bool bInterrupted);
+
+public:
+	void Set_CanJump(bool _jump) { CanJumping = _jump; }
+	void AttackCheck();
 
 private:
 	UPROPERTY(VisibleAnyWhere)
@@ -36,4 +47,24 @@ private:
 	
 	UPROPERTY(VisibleAnyWhere)
 	class UCameraComponent* Camera = nullptr;
+
+	UPROPERTY(VisibleAnyWhere, Category = pawn)
+	bool CanJumping = false;
+
+	UPROPERTY(VisibleAnyWhere,Category = pawn)
+	bool IsAttacking = false;
+
+	UPROPERTY()
+	class UMyAnimInstance* AnimInstance = nullptr;
+
+	UPROPERTY()
+	int32 AttackIndex = 0;
+
+public:
+	UPROPERTY()
+	float Horizontal = 0.f;
+
+	UPROPERTY()
+	float Vertical = 0.f;
+
 };
