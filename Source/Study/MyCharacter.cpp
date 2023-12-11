@@ -8,11 +8,14 @@
 #include "MyAnimInstance.h"
 #include "DrawDebugHelpers.h"
 #include "MyWeapon.h"
+#include "MyStatComponent.h"
+#include "Components/WidgetComponent.h"
+#include "MyCharacterWidget.h"
 
 // Sets default values
 AMyCharacter::AMyCharacter()
 {
- 	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
+	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 
 	SpringArm = CreateDefaultSubobject<USpringArmComponent>(TEXT("SPRINGARM"));
@@ -23,8 +26,8 @@ AMyCharacter::AMyCharacter()
 
 	SpringArm->TargetArmLength = 500.f;
 	SpringArm->SetRelativeRotation(FRotator(-35.f, 0.f, 0.f));
-	
-	GetMesh()->SetRelativeLocationAndRotation(FVector(0.f,0.f,-88.f),FRotator(0.f,-90.f,0.f));
+
+	GetMesh()->SetRelativeLocationAndRotation(FVector(0.f, 0.f, -88.f), FRotator(0.f, -90.f, 0.f));
 
 	static ConstructorHelpers::FObjectFinder<USkeletalMesh> SM(TEXT("SkeletalMesh'/Game/ParagonGreystone/Characters/Heroes/Greystone/Meshes/Greystone.Greystone'"));
 
@@ -32,7 +35,7 @@ AMyCharacter::AMyCharacter()
 	{
 		GetMesh()->SetSkeletalMesh(SM.Object);
 	}
-	
+
 	/*UE_LOG(LogTemp, Log, TEXT("hand_l_Soc"));
 	FName WeapSoc(TEXT("hand_l_Soc"));
 	if (GetMesh()->DoesSocketExist(WeapSoc))
@@ -40,14 +43,29 @@ AMyCharacter::AMyCharacter()
 		UE_LOG(LogTemp, Log, TEXT("Weap"));
 		static ConstructorHelpers::FObjectFinder<UStaticMesh> SWM(TEXT("StaticMesh'/Game/ParagonGreystone/FX/Meshes/Heroes/Greystone/SM_Greystone_Blade_01.SM_Greystone_Blade_01'"));
 
-		if (SWM.Succeeded()) 
+		if (SWM.Succeeded())
 		{
 			UE_LOG(LogTemp, Log, TEXT("Weap Suc"));
 			Weapon->SetStaticMesh(SWM.Object);
 		}
-		
+
 		Weapon->SetupAttachment(GetMesh(), WeapSoc);
 	}*/
+
+	Stat = CreateDefaultSubobject<UMyStatComponent>(TEXT("STAT"));
+
+	HpBar = CreateDefaultSubobject<UWidgetComponent>(TEXT("HPBAR"));
+	HpBar->SetupAttachment(GetMesh());
+	HpBar->SetRelativeLocation(FVector(0.f,0.f,200.f));
+	HpBar->SetWidgetSpace(EWidgetSpace::Screen);
+
+	static ConstructorHelpers::FClassFinder<UUserWidget> UW(TEXT("WidgetBlueprint'/Game/UI/WBP_HpBar.WBP_HpBar_C'"));
+
+	if (UW.Succeeded())
+	{
+		HpBar->SetWidgetClass(UW.Class); 
+		HpBar->SetDrawSize(FVector2D(200.f,50.f));
+	}
 }
 
 // Called when the game starts or when spawned
@@ -55,13 +73,13 @@ void AMyCharacter::BeginPlay()
 {
 	Super::BeginPlay();
 	
-	FName WeapSoc(TEXT("hand_l_soc"));
-	auto Weapon = GetWorld()->SpawnActor<AMyWeapon>(FVector::ZeroVector,FRotator::ZeroRotator);
+	//FName WeapSoc(TEXT("hand_l_soc"));
+	//auto Weapon = GetWorld()->SpawnActor<AMyWeapon>(FVector::ZeroVector,FRotator::ZeroRotator);
 
-	if (Weapon)
-	{
-		Weapon->AttachToComponent(GetMesh(),FAttachmentTransformRules::SnapToTargetNotIncludingScale, WeapSoc);
-	}
+	//if (Weapon)
+	//{
+		//Weapon->AttachToComponent(GetMesh(),FAttachmentTransformRules::SnapToTargetNotIncludingScale, WeapSoc);
+	//}
 }
 
 void AMyCharacter::PostInitializeComponents()
@@ -75,13 +93,21 @@ void AMyCharacter::PostInitializeComponents()
 		AnimInstance->OnMontageEnded.AddDynamic(this, &AMyCharacter::OnAttackMontageEnded);
 		AnimInstance->OnAttackHit.AddUObject(this, &AMyCharacter::AttackCheck);
 	}
+
+	// UI ÃÊ±âÈ­
+	HpBar->InitWidget();
+
+	auto HpWidget = Cast<UMyCharacterWidget>(HpBar->GetUserWidgetObject());
+
+	if (HpWidget)
+		HpWidget->Bind_Hp(Stat);
 }
 
 // Called every frame
 void AMyCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-
+	//UE_LOG(LogTemp, Log, TEXT("CJ = %d"), CanJumping);
 }
 
 // Called to bind functionality to input
@@ -100,7 +126,7 @@ void AMyCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompone
 
 void AMyCharacter::UpDown(float Value)
 {
-	if (IsAttacking)
+	if (IsAttacking || !CanJumping)
 		return;
 
 	Vertical = Value;
@@ -112,7 +138,7 @@ void AMyCharacter::UpDown(float Value)
 
 void AMyCharacter::LeftRight(float Value)
 {
-	if (IsAttacking)
+	if (IsAttacking || !CanJumping)
 		return;
 
 	Horizontal = Value;
@@ -136,7 +162,7 @@ void AMyCharacter::Yaw(float Value)
 
 void AMyCharacter::Jump()
 {
-	if (!CanJumping)
+	if (IsAttacking && !CanJumping)
 		return;
 
 	Super::Jump();
@@ -157,6 +183,12 @@ void AMyCharacter::Attack()
 void AMyCharacter::OnAttackMontageEnded(UAnimMontage* Montage, bool bInterrupted)
 {
 	IsAttacking = false;
+}
+
+float AMyCharacter::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser)
+{
+	Stat->OnAttacked(DamageAmount);
+	return DamageAmount;
 }
 
 void AMyCharacter::AttackCheck()
@@ -184,6 +216,9 @@ void AMyCharacter::AttackCheck()
 	if (bResult && HitResult.Actor.IsValid())
 	{
 		UE_LOG(LogTemp,Log,TEXT("Hit Actor : %s"),*HitResult.Actor->GetName());
+
+		FDamageEvent De;
+		HitResult.Actor->TakeDamage(Stat->GetAttack(),De,GetController(),this);
 	}
 }
 

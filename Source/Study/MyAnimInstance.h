@@ -7,6 +7,7 @@
 #include "MyAnimInstance.generated.h"
 
 DECLARE_MULTICAST_DELEGATE(FOnAttackHit);
+DECLARE_MULTICAST_DELEGATE(FOnJumpEnding);
 /**
  * 
  */
@@ -27,6 +28,9 @@ public:
 private:
 	UFUNCTION()
 	void AnimNotify_AttackHit();
+	
+	UFUNCTION()
+	void AnimNotify_JumpEnding();
 
 private:
 	UPROPERTY(EditAnywhere,BlueprintReadOnly,Category=Pawn,Meta=(AllowPrivateAccess=true))
@@ -52,4 +56,5 @@ private:
 
 public:
 	FOnAttackHit OnAttackHit;
+	FOnJumpEnding OnJumpEnding;
 };

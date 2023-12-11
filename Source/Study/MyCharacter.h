@@ -37,6 +37,7 @@ public:
 	UFUNCTION()
 	void OnAttackMontageEnded(UAnimMontage* Montage, bool bInterrupted);
 
+	virtual float TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser);
 public:
 	void Set_CanJump(bool _jump) { CanJumping = _jump; }
 	void AttackCheck();
@@ -66,5 +67,11 @@ public:
 
 	UPROPERTY()
 	float Vertical = 0.f;
+
+	UPROPERTY(VisibleAnywhere)
+	class UMyStatComponent* Stat;
+
+	UPROPERTY(VisibleAnywhere)
+	class UWidgetComponent* HpBar;
 
 };

@@ -8,7 +8,8 @@ public class Study : ModuleRules
 	{
 		PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
 	
-		PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine", "InputCore" });
+		// UMG 를 추가해야 UI를 사용 가능함
+		PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine", "InputCore", "UMG"});
 
 		PrivateDependencyModuleNames.AddRange(new string[] {  });
 

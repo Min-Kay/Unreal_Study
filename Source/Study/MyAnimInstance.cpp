@@ -67,3 +67,10 @@ void UMyAnimInstance::AnimNotify_AttackHit()
 	//UE_LOG(LogTemp,Log,TEXT("Attack"));
 	OnAttackHit.Broadcast();
 }
+
+void UMyAnimInstance::AnimNotify_JumpEnding()
+{
+	//UE_LOG(LogTemp, Log, TEXT("JE"));
+	OnJumpEnding.Broadcast();
+	JumpEnd = true;
+}
