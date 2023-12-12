@@ -11,6 +11,7 @@
 #include "MyStatComponent.h"
 #include "Components/WidgetComponent.h"
 #include "MyCharacterWidget.h"
+#include "MyAIController.h"
 
 // Sets default values
 AMyCharacter::AMyCharacter()
@@ -66,6 +67,10 @@ AMyCharacter::AMyCharacter()
 		HpBar->SetWidgetClass(UW.Class); 
 		HpBar->SetDrawSize(FVector2D(200.f,50.f));
 	}
+
+	// AI 조작을 가능케 해줌 -> Pawn에서 기본 제공
+	AIControllerClass = AMyAIController::StaticClass(); 
+	AutoPossessAI = EAutoPossessAI::PlacedInWorldOrSpawned; // 자동 빙의 조건
 }
 
 // Called when the game starts or when spawned
@@ -183,6 +188,8 @@ void AMyCharacter::Attack()
 void AMyCharacter::OnAttackMontageEnded(UAnimMontage* Montage, bool bInterrupted)
 {
 	IsAttacking = false;
+	
+	OnAttackEnd.Broadcast();
 }
 
 float AMyCharacter::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser)

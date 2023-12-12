@@ -6,6 +6,8 @@
 #include "GameFramework/Character.h"
 #include "MyCharacter.generated.h"
 
+DECLARE_MULTICAST_DELEGATE(FOnAttackEnd);
+
 UCLASS()
 class STUDY_API AMyCharacter : public ACharacter
 {
@@ -33,6 +35,8 @@ public:
 	virtual void Jump();
 
 	void Attack();
+
+	FOnAttackEnd OnAttackEnd;
 
 	UFUNCTION()
 	void OnAttackMontageEnded(UAnimMontage* Montage, bool bInterrupted);
